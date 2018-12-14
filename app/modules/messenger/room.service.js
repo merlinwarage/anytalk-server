@@ -4,14 +4,14 @@ var mongoose = require( 'mongoose' );
 const Rooms = require( '../../models/room' );
 const News = require( '../../models/news' );
 const async = require( 'async' );
+const axios = require( 'axios' );
 const request = require( 'request' );
 const Promise = require( 'bluebird' );
 const Constants = require( '../../common/constants' );
 const Utils = require( '../../common/utils' );
 mongoose.Promise = Promise;
 
-var RoomService = ( function () {
-
+const RoomService = ( function () {
     /**
      *
      * @returns {Promise}
@@ -427,6 +427,7 @@ var RoomService = ( function () {
         } );
     }
 
+
     /**
      *
      * @param req
@@ -435,30 +436,20 @@ var RoomService = ( function () {
     function getNews( req ) {
         return new Promise( function ( resolve ) {
 
-                let hasRoom = function ( news ) {
-                    return new Promise( function ( resolve ) {
-                        if ( news && news.hasOwnProperty( 'data' ) && news.data.articles ) {
-                            let subPromises = [];
-                            for ( let key in news.data.articles ) {
-                                if ( news.data.articles.hasOwnProperty( key ) && news.data.articles[ key ].title ) {
-                                    let titleNorm = Utils.removeDiacritics( news.data.articles[ key ].title );
-                                    subPromises.push( getRoomByTitle( titleNorm ).then( function ( result ) {
-                                        if ( result !== null ) {
-                                            news.data.articles[ key ].hasRoom = true;
-                                        }
-                                    } ) );
-                                }
+                const hasRoom = async ( news ) => {
+                    if ( news && news.hasOwnProperty( 'data' ) && news.data.articles ) {
+                        let item;
+                        await Promise.all( Object.keys( news.data.articles ).map( async ( key ) => {
+                            item = news.data.articles[ key ];
+                            if ( item && item.title ) {
+                                const titleNorm = Utils.removeDiacritics( item.title );
+                                item[ 'hasRoom' ] = await getRoomByTitle( titleNorm ).then( result => !!result );
                             }
-
-                            Promise.all( subPromises ).then( () => {
-                                resolve( news );
-                            }, reason => {
-                                console.log( reason );
-                            } );
-                        } else {
-                            resolve( news || { articles: {} } );
-                        }
-                    } );
+                        } ) );
+                        return news;
+                    } else {
+                        return news || { articles: {} };
+                    }
                 };
 
                 let updateDate = function () {
@@ -488,7 +479,7 @@ var RoomService = ( function () {
                             url: Constants.newsApi.apiServer
                         };
 
-                        return request( options, function ( err, res, body ) {
+                        return axios.post( Constants.newsApi.apiServer, options.body ).then( body => {
                             if ( body ) {
                                 body.createdAt = Date.now();
                                 News.findOneAndUpdate(
