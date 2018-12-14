@@ -26,7 +26,7 @@ var MessengerService = (function () {
      */
     function getMessageCount( room ) {
         return new Promise(function ( resolve ) {
-            return Messages[room].find({}).count().lean().exec(function ( err, docs ) {
+            return Messages[room].find({}).countDocuments().lean().exec(function ( err, docs ) {
                 resolve(docs);
             }, function ( err ) {
                 if (err) {
