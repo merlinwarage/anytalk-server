@@ -1,12 +1,9 @@
 'use strict';
 
-var mongoose = require( 'mongoose' );
+const mongoose = require( 'mongoose' );
 const Rooms = require( '../../models/room' );
 const News = require( '../../models/news' );
-const async = require( 'async' );
-const axios = require( 'axios' );
-const request = require( 'request' );
-const Promise = require( 'bluebird' );
+const Request = require( 'request' );
 const Constants = require( '../../common/constants' );
 const Utils = require( '../../common/utils' );
 mongoose.Promise = Promise;
@@ -107,11 +104,12 @@ const RoomService = ( function () {
         let favoriteRooms = [];
         await Promise.all( favlist.map( async ( item ) => {
             await getRoomById( item, lang ).then( res => {
-                favoriteRooms[ favoriteRooms.length ] = res;
+                if ( res ) {
+                    favoriteRooms[ favoriteRooms.length ] = res;
+                }
             } );
         } ) );
-
-        return favoriteRooms;
+        return favoriteRooms || {};
     }
 
     function getPrivateRooms( userId, lang ) {
@@ -170,7 +168,7 @@ const RoomService = ( function () {
      * @returns {Promise}
      */
 
-    async function getRoomById( roomId, lang = 'hu' ) {
+    async function getRoomById( roomId, lang ) {
         const populateQuery = [
             { path: 'user', select: 'name' },
             { path: 'updatedBy', select: 'name' },
@@ -183,21 +181,6 @@ const RoomService = ( function () {
             .lean()
             .then( docs => docs, err => err ? { errorMessage: err.message } : true );
     }
-
-    // function getRoomById( roomId, lang = 'hu' ) {
-    //     return new Promise( function ( resolve ) {
-    //         var populateQuery = [
-    //             { path: 'user', select: 'name' },
-    //             { path: 'updatedBy', select: 'name' },
-    //             { path: 'members', select: 'name' }
-    //         ];
-    //         return Rooms.findOne( { _id: roomId, language: lang } ).populate( populateQuery ).lean().exec( function ( err, docs ) {
-    //             resolve( docs );
-    //         }, function ( err ) {
-    //             resolve( err ? { errorMessage: err.message } : true );
-    //         } );
-    //     } );
-    // }
 
     /**
      *
@@ -381,8 +364,8 @@ const RoomService = ( function () {
      * @param request
      * @returns {Promise.<Boolean>}
      */
-    function checkDupe( request ) {
-        return getRoomById( request.body.room ).then( function ( roomData ) {
+    async function checkDupe( request, lang ) {
+        return await getRoomById( request.body.room, lang ).then( roomData => {
             return ( roomData.lastMessage === request.body.message );
         } );
     }
@@ -479,7 +462,7 @@ const RoomService = ( function () {
                             url: Constants.newsApi.apiServer
                         };
 
-                        return axios.post( Constants.newsApi.apiServer, options.body ).then( body => {
+                        return Request( options, function ( err, res, body ) {
                             if ( body ) {
                                 body.createdAt = Date.now();
                                 News.findOneAndUpdate(

@@ -20,19 +20,19 @@ const constants = require( './app/common/constants' );
 const hostname = os.hostname();
 
 if ( cluster && cluster.isMaster ) {
-    var numWorkers = require( 'os' ).cpus().length;
+    const numWorkers = require( 'os' ).cpus().length;
 
     console.log( 'Master cluster setting up ' + numWorkers + ' workers...' );
 
-    for ( var i = 0; i < numWorkers; i++ ) {
+    for ( let i = 0; i < numWorkers; i++ ) {
         cluster.fork();
     }
 
-    cluster.on( 'online', function ( worker ) {
+    cluster.on( 'online', worker => {
         console.log( 'Worker ' + worker.process.pid + ' is online' );
     } );
 
-    cluster.on( 'exit', function ( worker, code, signal ) {
+    cluster.on( 'exit', ( worker, code, signal ) => {
         console.log( 'Worker ' + worker.process.pid + ' died with code: ' + code + ', and signal: ' + signal );
         console.log( 'Starting a new worker' );
         cluster.fork();
@@ -47,7 +47,7 @@ if ( cluster && cluster.isMaster ) {
 // Configs
     const db = require( './config/db' );
 
-    var haltOnTimedout = function ( req, res, next ) {
+    const haltOnTimedout = ( req, res, next ) => {
         if ( !req.timedout ) next();
     };
 
@@ -55,7 +55,7 @@ if ( cluster && cluster.isMaster ) {
     app.use( haltOnTimedout );
 
 // Connect to the DB
-    var options = {
+    const options = {
         keepAlive: 300000,
         connectTimeoutMS: 30000,
         auto_reconnect: true,
@@ -68,53 +68,42 @@ if ( cluster && cluster.isMaster ) {
 
 // CONNECTION EVENTS
 // When successfully connected
-    mongoose.connection.on( 'connected', function () {
+    mongoose.connection.on( 'connected', () => {
         console.log( 'Mongoose default connection open to ' + db.url );
     } );
 
 // If the connection throws an error
-    mongoose.connection.on( 'error', function ( err ) {
+    mongoose.connection.on( 'error', ( err ) => {
         console.log( 'Mongoose default connection error: ' + err );
         mongoose.disconnect();
     } );
 
 // When the connection is disconnected
-    mongoose.connection.on( 'disconnected', function () {
+    mongoose.connection.on( 'disconnected', () => {
         console.log( 'Mongoose default connection disconnected' );
         mongoose.connect( db.url, options );
     } );
 
 // If the Node process ends, close the Mongoose connection
-    process.on( 'SIGINT', function () {
-        mongoose.connection.close( function () {
+    process.on( 'SIGINT', () => {
+        mongoose.connection.close( () => {
             console.log( 'Mongoose default connection disconnected through app termination' );
             process.exit( 0 );
         } );
     } );
 
 // HTTP
-    app.use( function ( req, res, next ) {
+    app.use( ( req, res, next ) => {
         if ( req.headers.origin ) {
-            var allowedOrigins = [
+            const allowedOrigins = [
                 /merlinw.org/,
                 /localhost/,
                 /anytalk.hu/
             ];
-            var origin = req.headers.origin;
+            const origin = req.headers.origin;
+            const originCheck = origin => !!allowedOrigins.some( allowed => origin.match( allowed ) );
+            if ( originCheck( origin ) ) res.setHeader( 'Access-Control-Allow-Origin', origin );
 
-            let originCheck = function ( origin ) {
-                for ( let key in allowedOrigins ) {
-                    if ( allowedOrigins.hasOwnProperty( key ) ) {
-                        if ( origin.match( allowedOrigins[ key ] ) ) {
-                            return true;
-                        }
-                    }
-                }
-            };
-
-            if ( originCheck( origin ) ) {
-                res.setHeader( 'Access-Control-Allow-Origin', origin );
-            }
         }
         res.setHeader( 'Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE' );
         res.setHeader( 'Access-Control-Allow-Headers', 'X-Requested-With,content-type,X-Auth-Token,X-Language' );
@@ -133,7 +122,7 @@ if ( cluster && cluster.isMaster ) {
             auto_reconnect: true
         } );
 
-    store.on( 'error', function ( error ) {
+    store.on( 'error', error => {
         assert.ifError( error );
         assert.ok( false );
     } );
@@ -175,8 +164,8 @@ if ( cluster && cluster.isMaster ) {
 // To expose public assets to the world
     app.use( express.static( __dirname + '/public/build/', { maxAge: oneYear } ) );
 
-    var io;
-    var socketIO = require( 'socket.io' );
+    let io;
+    const socketIO = require( 'socket.io' );
 
     if ( hostname === 'mwserv' ) {
         const createServer = require( 'auto-sni' );
@@ -196,7 +185,7 @@ if ( cluster && cluster.isMaster ) {
         io = socketIO.listen( https );
     } else {
         const http = require( 'http' ).Server( app );
-        http.listen( 3000, function () {
+        http.listen( 3000, () => {
             console.log( 'Process ' + process.pid + ' is listening on 3000 to all incoming requests' );
         } );
         io = socketIO.listen( http );
@@ -209,8 +198,8 @@ if ( cluster && cluster.isMaster ) {
     require( './app/modules/messenger/room.controller' )( app );
     require( './app/modules/messenger/messenger.controller' )( app );
 
-    process.on( 'SIGINT', function () {
-        mongoose.connection.close( function () {
+    process.on( 'SIGINT', () => {
+        mongoose.connection.close( () => {
             console.log( 'Mongoose default connection disconnected through app termination' );
             process.exit( 0 );
         } );
@@ -218,7 +207,7 @@ if ( cluster && cluster.isMaster ) {
 }
 
 /* unused configs
- var parseurl = require("parseurl");
+ const parseurl = require("parseurl");
 
  app.use(bodyParser.urlencoded({limit: "50mb", extended: true}));
  app.use(bodyParser.raw({limit: "50mb", type: "application/octet-stream"}));

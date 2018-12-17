@@ -1,32 +1,25 @@
 'use strict';
-var crypto = require('crypto'),
-    algorithm = 'aes-256-ctr',
-    password = '51d687c220747e28681ee659f6e04d98b21b87b583e3dc3c';
+const crypto = require( 'crypto' );
+const algorithm = 'aes-256-ctr';
+const password = '51d687c220747e28681ee659f6e04d98b21b87b583e3dc3c';
 
-var Secret = (function () {
-    function encrypt( text ) {
-        return new Promise(function ( resolve ) {
-            var cipher = crypto.createCipher(algorithm, password);
-            var crypted = cipher.update(text, 'utf8', 'hex');
-            crypted += cipher.final('hex');
-            resolve(crypted);
-        });
+const Secret = ( function () {
+    async function encrypt( text ) {
+        const cipher = await crypto.createCipher( algorithm, password );
+        let crypted = await cipher.update( text, 'utf8', 'hex' );
+        return await ( crypted + cipher.final( 'hex' ) );
     }
 
-    function decrypt( text ) {
-        return new Promise(function ( resolve ) {
-            var decipher = crypto.createDecipher(algorithm, password);
-            var dec = decipher.update(text, 'hex', 'utf8');
-            dec += decipher.final('utf8');
-            //assert.equal(decText, secret);
-            resolve(dec);
-        });
+    async function decrypt( text ) {
+        const decipher = await crypto.createDecipher( algorithm, password );
+        let dec = await decipher.update( text, 'hex', 'utf8' );
+        return await ( dec + decipher.final( 'utf8' ) );
     }
 
     return {
         encrypt: encrypt,
         decrypt: decrypt
     };
-})();
+} )();
 
 module.exports = Secret;

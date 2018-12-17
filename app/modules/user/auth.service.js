@@ -1,6 +1,5 @@
 'use strict';
 
-const Promise = require( 'bluebird' );
 const User = require( '../../models/user' );
 const UserService = require( './user.service' );
 const Secret = require( '../../common/secret' );

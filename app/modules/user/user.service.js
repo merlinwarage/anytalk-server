@@ -1,49 +1,52 @@
 'use strict';
 
-const Promise = require( 'bluebird' );
 const User = require( '../../models/user' );
 const Secret = require( '../../common/secret' );
 
-var UserService = ( function () {
+const UserService = ( () => {
 
     function getUser( userId ) {
-        return new Promise( function ( resolve ) {
-            User.findOne( { _id: userId } ).select( { password: 0, activities: 0 } ).lean().exec( function ( err, docs ) {
-                resolve( docs );
-            }, function ( err ) {
-                resolve( { errorMessage: err.message } );
-            } );
+        return new Promise( resolve => {
+            User.findOne( { _id: userId } ).select( { password: 0, activities: 0 } ).lean().exec().then(
+                docs => {
+                    resolve( docs );
+                },
+                err => {
+                    resolve( { errorMessage: err.message } );
+                } );
         } );
     }
 
     function getAllUsers() {
-        return new Promise( function ( resolve ) {
-            User.find( {} ).sort( '-_id' ).exec( function ( err, docs ) {
-                resolve( docs );
-            }, function ( err ) {
-                resolve( { errorMessage: err.message } );
-            } );
+        return new Promise( resolve => {
+            User.find( {} ).sort( '-_id' ).exec().then(
+                docs => {
+                    resolve( docs );
+                }, err => {
+                    resolve( { errorMessage: err.message } );
+                } );
         } );
     }
 
     function getUserActivities( userId ) {
-        return new Promise( function ( resolve ) {
-            User.findOne( { _id: userId } ).select( { activities: 1 } ).lean().exec( function ( err, docs ) {
-                resolve( docs );
-            }, function ( err ) {
-                resolve( { errorMessage: err.message } );
-            } );
+        return new Promise( resolve => {
+            User.findOne( { _id: userId } ).select( { activities: 1 } ).lean().exec().then(
+                docs => {
+                    resolve( docs );
+                }, err => {
+                    resolve( { errorMessage: err.message } );
+                } );
         } );
     }
 
     function addUser( request ) {
-        return Secret.encrypt( request.body.password.toString() ).then( function ( encResult ) {
+        return Secret.encrypt( request.body.password.toString() ).then( encResult => {
             request.body.password = encResult;
 
-            return new Promise( function ( resolve ) {
+            return new Promise( resolve => {
                 User.create(
                     request.body,
-                    function ( err, docs ) {
+                    ( err, docs ) => {
                         if ( err ) {
                             resolve( { errorMessage: err.message } );
                         }
@@ -56,12 +59,12 @@ var UserService = ( function () {
     }
 
     function updateUser( request ) {
-        return Secret.encrypt( request.body.password.toString() ).then( function ( encResult ) {
+        return Secret.encrypt( request.body.password.toString() ).then( encResult => {
             request.body.password = encResult;
 
-            return new Promise( function ( resolve ) {
+            return new Promise( resolve => {
                 User.update( { _id: request.body._id }, request.body,
-                    function ( err ) {
+                    err => {
                         if ( err ) {
                             resolve( { errorMessage: err.message } );
                         }
@@ -73,11 +76,11 @@ var UserService = ( function () {
     }
 
     function deleteUser( userId, status ) {
-        return new Promise( function ( resolve ) {
+        return new Promise( resolve => {
             User.findOneAndUpdate(
                 { _id: userId },
                 { deleted: status },
-                function ( err ) {
+                err => {
                     if ( err ) {
                         resolve( { errorMessage: err.message } );
                     }
@@ -88,7 +91,7 @@ var UserService = ( function () {
     }
 
     function setActivities( userId, messageId, mode ) {
-        return new Promise( function ( resolve ) {
+        return new Promise( resolve => {
             if ( mode > 0 ) {
                 User.findOneAndUpdate(
                     { _id: userId },
@@ -97,7 +100,7 @@ var UserService = ( function () {
                             'activities.up': messageId
                         }
                     },
-                    function onSuccess( err ) {
+                    err => {
                         if ( err ) {
                             resolve( { errorMessage: err.message } );
                         }
@@ -111,7 +114,7 @@ var UserService = ( function () {
                             'activities.down': messageId
                         }
                     },
-                    function onSuccess( err ) {
+                    err => {
                         if ( err ) {
                             resolve( { errorMessage: err.message } );
                         }
@@ -122,7 +125,7 @@ var UserService = ( function () {
     }
 
     function addFavorite( userId, roomId ) {
-        return new Promise( function ( resolve ) {
+        return new Promise( resolve => {
             User.findOneAndUpdate(
                 { _id: userId, 'activities.favorites': { $ne: roomId } },
                 {
@@ -130,7 +133,7 @@ var UserService = ( function () {
                         'activities.favorites': roomId
                     }
                 },
-                function onSuccess( err ) {
+                err => {
                     if ( err ) {
                         resolve( { errorMessage: err.message } );
                     }
@@ -140,7 +143,7 @@ var UserService = ( function () {
     }
 
     function removeFavorite( userId, roomId ) {
-        return new Promise( function ( resolve ) {
+        return new Promise( resolve => {
             User.findOneAndUpdate(
                 { _id: userId, 'activities.favorites': roomId },
                 {
@@ -148,7 +151,7 @@ var UserService = ( function () {
                         'activities.favorites': roomId
                     }
                 },
-                function onSuccess( err ) {
+                err => {
                     if ( err ) {
                         resolve( { errorMessage: err.message } );
                     }

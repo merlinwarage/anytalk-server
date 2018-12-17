@@ -17,8 +17,7 @@
  */
 
 const safe = require('safe-regex');
-const Promise = require("bluebird");
- 
+
 function paginate(query, options, callback) {
 
     var escapeRegExp = function (str) {
@@ -74,7 +73,7 @@ function paginate(query, options, callback) {
 
         promises = {
             docs: docsQuery.exec(),
-            count: this.count(query).exec()
+            count: this.countDocuments(query).exec()
         };
 
         if (lean && leanWithId) {
