@@ -5,7 +5,7 @@ const mongoosePaginate = require( '../common/mongoose-paginate' );
 
 mongoose.Promise = Promise;
 
-var ModelSchema = new Schema( {
+const ModelSchema = new Schema( {
     title: {
         type: String, required: true, trim: true
     },

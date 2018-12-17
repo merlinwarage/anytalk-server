@@ -3,7 +3,7 @@ const mongoose = require( 'mongoose' );
 const Schema = mongoose.Schema;
 mongoose.Promise = Promise;
 
-var ModelSchema = new Schema( {
+const ModelSchema = new Schema( {
     name: {
         type: String, required: true, trim: true
     },

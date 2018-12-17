@@ -1,47 +1,47 @@
-var userList = {};
-var defaultRoom = 'defaults';
-userList[defaultRoom] = {};
+const userList = {};
+const defaultRoom = 'defaults';
+userList[ defaultRoom ] = {};
 
-module.exports = function (io) {
-    io.sockets.on('connection', function (socket) {
+module.exports = io => {
+    io.sockets.on( 'connection', socket => {
 
         socket.room = defaultRoom;
 
         //User Data transfer
-        socket.on('user:join', function (userData) {
-            if (socket.room && socket.room != userData.room) {
-                socket.leave(socket.room);
+        socket.on( 'user:join', userData => {
+            if ( socket.room && socket.room != userData.room ) {
+                socket.leave( socket.room );
             }
 
             socket.room = userData.room;
-            socket.join(userData.room);
+            socket.join( userData.room );
 
             socket.userData = userData;
-            if (!userList[socket.room]) {
-                userList[socket.room] = {};
+            if ( !userList[ socket.room ] ) {
+                userList[ socket.room ] = {};
             }
-            userList[socket.room][userData.userId] = userData;
-            updateUserlist()
-        });
-
-        socket.on('user:left', function (userId) {
-            delete userList[socket.room][userId];
+            userList[ socket.room ][ userData.userId ] = userData;
             updateUserlist();
-        });
+        } );
 
-        socket.on('disconnect', function () {
-            if (socket.userData && socket.userData.hasOwnProperty('userId')) {
-                delete userList[socket.room][socket.userData.userId];
+        socket.on( 'user:left', userId => {
+            delete userList[ socket.room ][ userId ];
+            updateUserlist();
+        } );
+
+        socket.on( 'disconnect', () => {
+            if ( socket.userData && socket.userData.hasOwnProperty( 'userId' ) ) {
+                delete userList[ socket.room ][ socket.userData.userId ];
                 updateUserlist();
             }
-        });
+        } );
 
-        var updateUserlist = function () {
-            io.to(socket.room).emit('user:update', userList);
+        const updateUserlist = () => {
+            io.to( socket.room ).emit( 'user:update', userList );
         };
 
-        var sendMessages = function (data) {
-            io.sockets.in(data.room).emit('send:message', {
+        const sendMessages = data => {
+            io.sockets.in( data.room ).emit( 'send:message', {
                 _id: data._id,
                 room: data.room,
                 userId: data.userId,
@@ -52,13 +52,13 @@ module.exports = function (io) {
                     name: data.replyTo.name
                 },
                 createdAt: data.createdAt
-            });
+            } );
         };
 
         //Message Data transfer
-        socket.on('send:message', function (data) {
-            sendMessages(data);
-        });
+        socket.on( 'send:message', data => {
+            sendMessages( data );
+        } );
 
-    });
+    } );
 };
