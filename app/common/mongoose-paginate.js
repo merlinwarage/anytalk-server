@@ -1,4 +1,5 @@
 'use strict';
+
 /**
  * @package mongoose-paginate
  * @param {Object} [query={}]
@@ -16,17 +17,14 @@
  */
 
 const safe = require( 'safe-regex' );
-const mongoose = require( 'mongoose' );
-mongoose.Promise = Promise;
-
 
 function paginate( query, options, callback ) {
 
-    const escapeRegExp = str => {
+    const escapeRegExp = function ( str ) {
         return str.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
     };
 
-    const replaceAll = ( str, find, replace ) => {
+    const replaceAll = function ( str, find, replace ) {
         return str.replace( new RegExp( escapeRegExp( find ), 'g' ), replace );
     };
 
@@ -75,7 +73,7 @@ function paginate( query, options, callback ) {
 
         promises = {
             docs: docsQuery.exec(),
-            count: this.countDocuments( query ).exec()
+            count: this.count( query ).exec()
         };
 
         if ( lean && leanWithId ) {
