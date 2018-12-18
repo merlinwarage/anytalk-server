@@ -365,9 +365,7 @@ const RoomService = ( function () {
      * @returns {Promise.<Boolean>}
      */
     async function checkDupe( request, lang ) {
-        return await getRoomById( request.body.room, lang ).then( roomData => {
-            return ( roomData.lastMessage === request.body.message );
-        } );
+        return await getRoomById( request.body.room, lang ).then( roomData => roomData.lastMessage === request.body.message );
     }
 
     /**

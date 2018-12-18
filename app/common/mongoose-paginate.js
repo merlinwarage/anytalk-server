@@ -1,5 +1,4 @@
 'use strict';
-
 /**
  * @package mongoose-paginate
  * @param {Object} [query={}]
@@ -17,6 +16,9 @@
  */
 
 const safe = require( 'safe-regex' );
+const mongoose = require( 'mongoose' );
+mongoose.Promise = Promise;
+
 
 function paginate( query, options, callback ) {
 

@@ -21,10 +21,14 @@ module.exports = app => {
     } );
 
     app.post( Constants.api.v1.message.paginate, ( req, res ) => {
-        MessengerService.getMessagesByPage( req ).then(
-            data => res.status( 200 ).json( { data: data } ),
-            error => res.status( 500 ).send( error.errorMessage )
-        );
+        if ( req.body.room ) {
+            MessengerService.getMessagesByPage( req ).then(
+                data => res.status( 200 ).json( { data: data } ),
+                error => res.status( 500 ).send( error )
+            );
+        } else {
+            res.status( 200 ).json( { info: 'waiting for RoomID' } );
+        }
     } );
 
     /**
@@ -40,6 +44,33 @@ module.exports = app => {
                     const StrippedString = req.body.message.replace( /(<([^>]+)>)/ig, '' ).replace( /\[([^\]]+)\]/ig, '' );
                     if ( StrippedString.trim() ) {
                         MessengerService.addMessage( req ).then( dataResult => {
+                                RoomService.updateRoomStatus( req, 'update' ).then(
+                                    roomResponse => {
+                                        res.status( 200 ).json( { data: dataResult, dupe: roomResponse } );
+                                    } );
+                            },
+                            error => {
+                                res.status( 200 ).json( { error: error.errorMessage } );
+                            } );
+                    } else {
+                        res.status( 200 ).json( { error: 'Empty message' } );
+                    }
+                } else {
+                    res.status( 200 ).json( { error: 'Duplicated message' } );
+                }
+            }, error => {
+                res.status( 500 ).send( error.errorMessage );
+            } );
+    } );
+
+    app.put( Constants.api.v1.message.update, ( req, res ) => {
+        const lang = req.get( 'X-Language' );
+        RoomService.checkDupe( req, lang ).then(
+            dupeResult => {
+                if ( !dupeResult ) {
+                    const StrippedString = req.body.message.replace( /(<([^>]+)>)/ig, '' ).replace( /\[([^\]]+)\]/ig, '' );
+                    if ( StrippedString.trim() ) {
+                        MessengerService.editMessage( req ).then( dataResult => {
                                 RoomService.updateRoomStatus( req, 'update' ).then(
                                     roomResponse => {
                                         res.status( 200 ).json( { data: dataResult, dupe: roomResponse } );

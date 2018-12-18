@@ -49,10 +49,9 @@ const MessengerService = ( function () {
                         delete result.docs[ key ];
                     }
                 } );
-
                 return result;
-            }, function ( err ) {
-                return { errorMessage: err.message };
+            }, err => {
+                return { errorMessage: err };
             } );
     }
 
@@ -105,6 +104,36 @@ const MessengerService = ( function () {
         } );
     }
 
+    /**
+     *
+     * @param request
+     */
+    function editMessage( request ) {
+        return new Promise( function ( resolve ) {
+            if ( request.body.message.length > 1 ) {
+
+                let messageData = {
+                    user: request.body.user,
+                    message: request.body.message,
+                    'replyTo._id': request.body.replyToId,
+                    'replyTo.name': request.body.replyToName,
+                    updatedAt: request.body.updatedAt,
+                    __vendorData: request.body.__vendorData
+                };
+
+                return Messages[ request.body.room ].findOneAndUpdate( { _id: request.body.messageId }, messageData,
+                    ( err, message ) => resolve( err ? { errorMessage: err.message } : message )
+                );
+            } else {
+                resolve( true );
+            }
+        } );
+    }
+
+    /**
+     *
+     * @param request
+     */
     function setVote( request ) {
         let upVote;
         let downVote;
@@ -139,6 +168,7 @@ const MessengerService = ( function () {
         getMessageById: getMessageById,
         deleteMessage: deleteMessage,
         addMessage: addMessage,
+        editMessage: editMessage,
         setVote: setVote
     };
 } )();
