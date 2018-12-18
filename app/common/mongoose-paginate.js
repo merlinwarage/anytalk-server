@@ -16,26 +16,26 @@
  * @returns {Promise}
  */
 
-const safe = require('safe-regex');
+const safe = require( 'safe-regex' );
 
-function paginate(query, options, callback) {
+function paginate( query, options, callback ) {
 
-    var escapeRegExp = function (str) {
-        return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escapeRegExp = str => {
+        return str.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
     };
 
-    var replaceAll = function (str, find, replace) {
-        return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
+    const replaceAll = ( str, find, replace ) => {
+        return str.replace( new RegExp( escapeRegExp( find ), 'g' ), replace );
     };
 
-    query = safe(query) ? query : {};
-    for (var i in query) {
-        if (query[i].indexOf('%') !== -1) {
-            query[i] = new RegExp(replaceAll(query[i], '%', '.*'), 'ig');
+    query = safe( query ) ? query : {};
+    for ( let i in query ) {
+        if ( query[ i ].indexOf( '%' ) !== -1 ) {
+            query[ i ] = new RegExp( replaceAll( query[ i ], '%', '.*' ), 'ig' );
         }
     }
 
-    options = Object.assign({}, paginate.options, options);
+    options = Object.assign( {}, paginate.options, options );
 
     let select = options.select;
     let sort = options.sort;
@@ -45,80 +45,80 @@ function paginate(query, options, callback) {
     let limit = options.limit ? options.limit : 10;
     let page, offset, skip, promises;
 
-    if (options.offset) {
+    if ( options.offset ) {
         offset = options.offset;
         skip = offset;
-    } else if (options.page) {
+    } else if ( options.page ) {
         page = options.page;
-        skip = (page - 1) * limit;
+        skip = ( page - 1 ) * limit;
     } else {
         page = 1;
         offset = 0;
         skip = offset;
     }
 
-    if (limit) {
-        let docsQuery = this.find(query)
-            .select(select)
-            .sort(sort)
-            .skip(skip)
-            .limit(limit)
-            .lean(lean);
+    if ( limit ) {
+        let docsQuery = this.find( query )
+            .select( select )
+            .sort( sort )
+            .skip( skip )
+            .limit( limit )
+            .lean( lean );
 
-        if (populate) {
-            [].concat(populate).forEach((item) => {
-                docsQuery.populate(item);
-            });
+        if ( populate ) {
+            [].concat( populate ).forEach( ( item ) => {
+                docsQuery.populate( item );
+            } );
         }
 
         promises = {
             docs: docsQuery.exec(),
-            count: this.countDocuments(query).exec()
+            count: this.countDocuments( query ).exec()
         };
 
-        if (lean && leanWithId) {
-            promises.docs = promises.docs.then((docs) => {
-                docs.forEach((doc) => {
-                    doc.id = String(doc._id);
-                });
+        if ( lean && leanWithId ) {
+            promises.docs = promises.docs.then( ( docs ) => {
+                docs.forEach( ( doc ) => {
+                    doc.id = String( doc._id );
+                } );
                 return docs;
-            });
+            } );
         }
     }
 
-    promises = Object.keys(promises).map((x) => promises[x]);
+    promises = Object.keys( promises ).map( ( x ) => promises[ x ] );
 
-    return Promise.all(promises).then((data) => {
-        return new Promise(function (resolve) {
+    return Promise.all( promises ).then( ( data ) => {
+        return new Promise( function ( resolve ) {
             let result = {
-                docs: data[0],
-                total: data[1],
+                docs: data[ 0 ],
+                total: data[ 1 ],
                 limit: limit
             };
 
-            if (offset !== undefined) {
+            if ( offset !== undefined ) {
                 result.offset = offset;
             }
 
-            if (page !== undefined) {
+            if ( page !== undefined ) {
                 result.page = page;
-                result.pages = Math.ceil(data.count / limit) || 1;
+                result.pages = Math.ceil( data.count / limit ) || 1;
             }
 
-            if (typeof callback === 'function') {
-                return callback(null, result);
+            if ( typeof callback === 'function' ) {
+                return callback( null, result );
             }
 
-            resolve(result);
-        });
-    });
+            resolve( result );
+        } );
+    } );
 }
 
 /**
  * @param {Schema} schema
  */
 
-module.exports = function (schema) {
+module.exports = function ( schema ) {
     schema.statics.paginate = paginate;
 };
 
