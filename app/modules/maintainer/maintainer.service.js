@@ -10,6 +10,13 @@ const noImage = Constants.defaults.noImagePath;
 
 const MaintainerService = ( () => {
 
+    const options = {
+        dontFetchImages: false,
+        language: 'hu',
+        category: '',
+        itemCount: 0
+    };
+
     /**
      * public
      * @param language
@@ -17,20 +24,25 @@ const MaintainerService = ( () => {
      * @param itemCount
      * @returns {Promise}
      */
-    function newsFeed( language, category, itemCount ) {
+    function newsFeed( language, category, itemCount, noImage ) {
+        options.language = language;
+        options.category = category;
+        options.itemCount = itemCount;
+        options.dontFetchImages = noImage;
+
         return new Promise( function ( resolve ) {
 
-            switch ( language ) {
+            switch ( options.language ) {
                 case Constants.languages.hu_HU: {
-                    getNewsHu( category ).then(
-                        async response => resolve( buildArticleList( response, category, itemCount ) ),
+                    getNewsHu( options.category ).then(
+                        async articles => resolve( buildArticleList( articles, options ) ),
                         err => resolve( err )
                     );
                     break;
                 }
                 case Constants.languages.en_GB: {
-                    getNewsEn( category ).then(
-                        async response => resolve( buildArticleList( response, category, itemCount ) ),
+                    getNewsEn( options.category ).then(
+                        async articles => resolve( buildArticleList( articles, options ) ),
                         err => resolve( err )
                     );
                     break;
@@ -41,7 +53,7 @@ const MaintainerService = ( () => {
         } );
     }
 
-    async function buildArticleList( articles, category, itemCount ) {
+    async function buildArticleList( articles, { itemCount, category } ) {
         let articleList = [];
         if ( !itemCount && articles.articles ) {
             itemCount = articles.articles.length;
@@ -174,7 +186,7 @@ const MaintainerService = ( () => {
      */
     function imageHandler( item, category ) {
         return new Promise( function ( resolve ) {
-            if ( item.urlToImage && category ) {
+            if ( item.urlToImage && category && !options.dontFetchImages ) {
                 let localImage = getPathFromUrl( item.urlToImage.substring( item.urlToImage.lastIndexOf( '/' ) + 1 ) );
 
                 //check blacklist
@@ -197,7 +209,11 @@ const MaintainerService = ( () => {
                 } else {
                     //save the image and load the local one... if everything went well... otherwise load the default placeholder image
                     saveNews( item.urlToImage ).then( function ( uploadResult ) {
-                            item.urlToImage = ( fs.existsSync( Constants.defaults.imageAbsPath + localImage ) && uploadResult.statusCode === 200 && ( getFilesizeInBytes( Constants.defaults.imageAbsPath + localImage ) > 1000 ) ) ? Constants.defaults.imageRelPath + localImage : noImage;
+                            item.urlToImage = (
+                                fs.existsSync( Constants.defaults.imageAbsPath + localImage ) &&
+                                uploadResult.statusCode === 200 &&
+                                ( getFilesizeInBytes( Constants.defaults.imageAbsPath + localImage ) > 1000 )
+                            ) ? Constants.defaults.imageRelPath + localImage : noImage;
                             resolve( item );
                         }, function () {
                             item.urlToImage = noImage;

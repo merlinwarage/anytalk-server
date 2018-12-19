@@ -98,6 +98,7 @@ if ( cluster && cluster.isMaster ) {
             const allowedOrigins = [
                 /merlinw.org/,
                 /localhost/,
+                /inst.hu/,
                 /anytalk.hu/
             ];
             const origin = req.headers.origin;

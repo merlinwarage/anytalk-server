@@ -62,7 +62,8 @@ module.exports = app => {
     } );
 
     app.get( Constants.api.v1.room.getOne, ( req, res ) => {
-        RoomService.getRoomById( req.params.id ).then(
+        let lang = req.get( 'X-Language' );
+        RoomService.getRoomById( req.params.id, lang ).then(
             data => res.status( 200 ).json( { data: data } ),
             error => res.status( 500 ).send( error.errorMessage )
         );
@@ -88,7 +89,7 @@ module.exports = app => {
     app.post( Constants.api.v1.room.save, ( req, res ) => {
         if ( req.body._id ) {
             RoomService.updateRoom( req ).then(
-                data => data.errorMessage ? res.status( 500 ).senddata : res.status( 200 ).senddata,
+                data => data.errorMessage ? res.status( 500 ).send( data ) : res.status( 200 ).send( data ),
                 error => res.status( 500 ).send( error.errorMessage )
             );
         } else {

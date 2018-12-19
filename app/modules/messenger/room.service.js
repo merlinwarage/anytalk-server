@@ -286,16 +286,15 @@ const RoomService = ( function () {
     function addRoom( request, lang ) {
         return new Promise( function ( resolve ) {
             request.body.language = lang || 'en';
-            return Rooms.create( request.body,
-                function ( err, doc ) {
-                    if ( err ) {
-                        resolve( { errorMessage: err.message } );
-                    } else {
-                        require( '../../models/messenger' )( [ doc._id ] );
-                        resolve( doc );
-                    }
+            return Rooms.create( request.body, ( err, doc ) => {
+                if ( err ) {
+                    resolve( { errorMessage: err.message } );
+                } else {
+                    require( '../../models/messenger' )( [ doc._id ] );
+                    resolve( doc );
+                }
 
-                } );
+            } );
         } );
     }
 
@@ -306,15 +305,14 @@ const RoomService = ( function () {
      */
     function updateRoom( request ) {
         return new Promise( function ( resolve ) {
-            return Rooms.update( { _id: request.body._id }, request.body,
-                function ( err, doc ) {
+            return Rooms.findOneAndUpdate( { _id: request.body._id }, request.body,
+                ( err, doc ) => {
                     if ( err ) {
                         resolve( { errorMessage: err.message } );
                     } else {
                         require( '../../models/messenger' )( [ doc._id ] );
-                        resolve( true );
+                        resolve( request.body );
                     }
-
                 } );
         } );
     }
@@ -333,7 +331,7 @@ const RoomService = ( function () {
                         lastMessage: request.body.message,
                         $inc: { messageCount: 1 }
                     },
-                    function ( err, doc ) {
+                    ( err, doc ) => {
                         if ( err ) {
                             resolve( { errorMessage: err.message } );
                         } else {
@@ -347,7 +345,7 @@ const RoomService = ( function () {
                 return Rooms.findOneAndUpdate( { _id: request.params.room }, {
                         $inc: { messageCount: -1 }
                     },
-                    function ( err ) {
+                    err => {
                         if ( err ) {
                             resolve( { errorMessage: err.message } );
                         } else {
