@@ -126,11 +126,10 @@ module.exports = app => {
     } );
 
     app.delete( Constants.api.v1.room.delete, ( req, res ) => {
-        RoomService.deleteRoom( req ).then( data => {
-            res.status( 200 ).json( data );
-        }, error => {
-            res.status( 500 ).send( error.errorMessage );
-        } );
+        RoomService.deleteRoom( req ).then(
+            data => data.errorMessage ? res.status( 500 ).send( data ) : res.status( 200 ).send( data ),
+            error => res.status( 500 ).send( error.errorMessage )
+        );
     } );
 
 }

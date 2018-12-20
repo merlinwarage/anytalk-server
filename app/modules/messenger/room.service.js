@@ -4,6 +4,7 @@ const mongoose = require( 'mongoose' );
 const Rooms = require( '../../models/room' );
 const News = require( '../../models/news' );
 const Request = require( 'request' );
+const async = require( 'async' );
 const Constants = require( '../../common/constants' );
 const Utils = require( '../../common/utils' );
 mongoose.Promise = Promise;
@@ -253,28 +254,28 @@ const RoomService = ( function () {
      * @returns {Promise}
      */
     function deleteRoom( request ) {
-        return new Promise( function ( resolve ) {
-            return Rooms.remove( {
-                _id: request.params.id
-            }, function ( err ) {
-                if ( err ) {
-                    resolve( { errorMessage: err.message } );
-                }
+        return new Promise(
+            resolve => {
+                return Rooms.remove( { _id: request.params.id },
+                    err => {
+                        if ( err ) {
+                            resolve( { errorMessage: err.message } );
+                        }
 
-                async.forEachOf( mongoose.connection.collections, function ( collection, collectionName, done ) {
-                    if ( collectionName.indexOf( 'msg_' + request.params.id ) > -1 ) {
-                        collection.drop( function ( err ) {
-                            if ( err && err.message != 'ns not found' ) {
-                                done( err );
-                            } else {
-                                done( null );
-                                resolve( true );
+                        async.forEachOf( mongoose.connection.collections, ( collection, collectionName, done ) => {
+                            if ( collectionName.indexOf( 'msg_' + request.params.id ) > -1 ) {
+                                collection.drop( err => {
+                                    if ( err && err.message !== 'ns not found' ) {
+                                        done( err );
+                                    } else {
+                                        done( null );
+                                        resolve( true );
+                                    }
+                                } );
                             }
                         } );
-                    }
-                } );
+                    } );
             } );
-        } );
     }
 
     /**
