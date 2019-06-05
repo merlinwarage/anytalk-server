@@ -6,6 +6,8 @@
 /out-tsc
 /mongo
 /public
+/config
+/sslcert
 
 # Dependencies
 /node_modules
