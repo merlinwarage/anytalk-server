@@ -97,8 +97,8 @@ if ( cluster && cluster.isMaster ) {
         if ( req.headers.origin ) {
             const allowedOrigins = [
                 /merlinw.org/,
-                /localhost/,
                 /inst.hu/,
+                /localhost/,
                 /anytalk.hu/
             ];
             const origin = req.headers.origin;
@@ -150,7 +150,7 @@ if ( cluster && cluster.isMaster ) {
     app.use( helmet() );
     app.use( helmet.xssFilter( { setOnOldIE: true } ) );
     app.use( helmet.frameguard( 'deny' ) );
-    app.use( helmet.hsts( { maxAge: 7776000000, includeSubdomains: true } ) );
+    app.use( helmet.hsts( { maxAge: 7776000000, includeSubDomains: true } ) );
     app.use( helmet.hidePoweredBy() );
     app.use( helmet.ieNoOpen() );
     app.use( helmet.noSniff() );
@@ -168,29 +168,50 @@ if ( cluster && cluster.isMaster ) {
     let io;
     const socketIO = require( 'socket.io' );
 
-    if ( hostname === 'mwserv' ) {
-        const createServer = require( 'auto-sni' );
-        const https = createServer( {
-            email: 'the.merlinw@gmail.com',
-            agreeTos: true,
-            domains: [ 'merlinw.org', 'www.merlinw.org' ],
-            forceSSL: true,
-            redirectCode: 301,
-            ports: { http: 8080, https: 443 }
-        }, app );
 
-        https.once( 'listening', () => {
-            console.log( 'Process ' + process.pid + ' is listening on 443 to all incoming requests' );
-        } );
+    /*
+        if ( hostname === 'mwserv' ) {
+            const createServer = require( 'auto-sni' );
+            const https = createServer( {
+                email: 'the.merlinw@gmail.com',
+                agreeTos: true,
+                domains: [ 'merlinw.org', 'www.merlinw.org' ],
+                forceSSL: true,
+                redirectCode: 301,
+                ports: { http: 8080, https: 443 },
+            }, app);
 
-        io = socketIO.listen( https );
-    } else {
-        const http = require( 'http' ).Server( app );
-        http.listen( 3000, () => {
-            console.log( 'Process ' + process.pid + ' is listening on 3000 to all incoming requests' );
-        } );
-        io = socketIO.listen( http );
-    }
+            https.once( 'listening', () => {
+                console.log( 'Process ' + process.pid + ' is listening on 443 to all incoming requests' );
+            } ).listen(8080, 443);
+
+            io = socketIO.listen( https );
+        } else {
+            const http = require( 'http' ).Server( app );
+            http.listen( 8080, () => {
+                console.log( 'Process ' + process.pid + ' is listening on 3000 to all incoming requests' );
+            } );
+            io = socketIO.listen( http );
+        }
+    */
+
+
+    var fs = require('fs');
+    var http = require('http');
+    var https = require('https');
+    var privateKey  = fs.readFileSync('sslcert/server.key', 'utf8');
+    var certificate = fs.readFileSync('sslcert/server.crt', 'utf8');
+    var credentials = {key: privateKey, cert: certificate};
+
+    var httpServer = http.createServer(app);
+
+    var httpsServer = https.createServer(credentials, app);
+    io = socketIO.listen( httpsServer );
+
+    httpServer.listen(8080);
+    httpsServer.listen(443);
+
+
 
 // Express Routes
     require( './app/modules/socket/socket.controller' )( io );

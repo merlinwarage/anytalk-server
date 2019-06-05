@@ -16,11 +16,8 @@
 /platforms
 
 # IDEs and editors
-.idea/*
 !.idea/runConfigurations/
 !.idea/codeStyleSettings.xml
-.project
-.classpath
 .c9/
 *.launch
 .settings/
@@ -70,7 +67,6 @@ Thumbs.db
 ### IntelliJ IDEA ###
 .idea
 *.iws
-*.iml
 *.ipr
 
 ### NetBeans ###

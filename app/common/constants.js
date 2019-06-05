@@ -164,34 +164,34 @@ module.exports = {
 
     sourceListHu: {
         home: {
-            source: 'http://index.hu/24ora/rss/'
+            source: 'https://index.hu/24ora/rss/'
         },
         general: {
-            source: "http://index.hu/kulfold/rss/"
+            source: "https://index.hu/kulfold/rss/"
         },
         technology: {
-            source: "http://index.hu/tech/rss/"
+            source: "https://index.hu/tech/rss/"
         },
         science: {
-            source: "http://index.hu/tudomany/rss/"
+            source: "https://index.hu/tudomany/rss/"
         },
         sport: {
-            source: "http://index.hu/sport/rss/"
+            source: "https://index.hu/sport/rss/"
         },
         music: {
-            source: "http://index.hu/kultur/zene/rss/"
+            source: "https://index.hu/kultur/zene/rss/"
         },
         entertainment: {
-            source: "http://index.hu/kultur/rss/"
+            source: "https://index.hu/kultur/cinematrix/rss/"
         },
         gaming: {
-            source: "http://hu.ign.com/feed.xml" //http://index.hu/tech/godmode/rss/
+            source: "https://hu.ign.com/feed.xml" //http://index.hu/tech/godmode/rss/
         },
         business: {
-            source: "http://index.hu/gazdasag/rss/"
+            source: "https://index.hu/gazdasag/rss/"
         },
         social: {
-            source: "http://velvet.hu/24ora/rss/"
+            source: "https://velvet.hu/24ora/rss/"
         }
     },
     permissions: {
