@@ -1,8 +1,3 @@
 module.exports = {
-    url: 'mongodb://localhost:27017/db'
-
+    url: 'mongodb://localhost:27017/anytalk'
 };
-
-// module.exports = {
-//     url: 'mongodb://user:pass@localhost:27017/db'
-// };
