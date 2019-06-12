@@ -2,6 +2,8 @@
 // Dependencies
 const express = require( 'express' );
 const app = express();
+const http = require( 'http' );
+const sio = require( 'socket.io' );
 const compression = require( 'compression' );
 const mongoose = require( 'mongoose' );
 const bodyParser = require( 'body-parser' );
@@ -13,11 +15,9 @@ const mongoDBStore = require( 'connect-mongodb-session' )( session );
 const helmet = require( 'helmet' );
 const assert = require( 'assert' );
 const timeout = require( 'connect-timeout' );
-const os = require( 'os' );
-const cluster = false; //require('cluster');
 
 const constants = require( './app/common/constants' );
-const hostname = os.hostname();
+const cluster = false; //require('cluster');
 
 if ( cluster && cluster.isMaster ) {
     const numWorkers = require( 'os' ).cpus().length;
@@ -165,52 +165,9 @@ if ( cluster && cluster.isMaster ) {
 // To expose public assets to the world
     app.use( express.static( __dirname + '/public/build/', { maxAge: oneYear } ) );
 
-    let io;
-    const socketIO = require( 'socket.io' );
-
-
-    /*
-        if ( hostname === 'mwserv' ) {
-            const createServer = require( 'auto-sni' );
-            const https = createServer( {
-                email: 'the.merlinw@gmail.com',
-                agreeTos: true,
-                domains: [ 'merlinw.org', 'www.merlinw.org' ],
-                forceSSL: true,
-                redirectCode: 301,
-                ports: { http: 8080, https: 443 },
-            }, app);
-
-            https.once( 'listening', () => {
-                console.log( 'Process ' + process.pid + ' is listening on 443 to all incoming requests' );
-            } ).listen(8080, 443);
-
-            io = socketIO.listen( https );
-        } else {
-            const http = require( 'http' ).Server( app );
-            http.listen( 8080, () => {
-                console.log( 'Process ' + process.pid + ' is listening on 3000 to all incoming requests' );
-            } );
-            io = socketIO.listen( http );
-        }
-    */
-
-
-    var fs = require('fs');
-    var http = require('http');
-    var https = require('https');
-    var privateKey  = fs.readFileSync('sslcert/server.key', 'utf8');
-    var certificate = fs.readFileSync('sslcert/server.crt', 'utf8');
-    var credentials = {key: privateKey, cert: certificate};
-
-    var httpServer = http.createServer(app);
-
-    var httpsServer = https.createServer(credentials, app);
-    io = socketIO.listen( httpsServer );
-
-    httpServer.listen(8080);
-    httpsServer.listen(443);
-
+    const httpServer = http.createServer( app );
+    const io = sio.listen( httpServer );
+    httpServer.listen( 8080 );
 
 
 // Express Routes
